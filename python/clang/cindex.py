@@ -1410,6 +1410,228 @@ ExceptionSpecificationKind.UNEVALUATED = ExceptionSpecificationKind(6)
 ExceptionSpecificationKind.UNINSTANTIATED = ExceptionSpecificationKind(7)
 ExceptionSpecificationKind.UNPARSED = ExceptionSpecificationKind(8)
 
+
+class CommentKind(BaseEnumeration):
+    """
+    Describes the kind of type.
+    """
+
+    # The unique kind objects, indexed by id.
+    _kinds = []
+    _name_map = None
+
+    def __repr__(self):
+        return 'CommentKind.%s' % (self.name,)
+
+    @staticmethod
+    def from_result(res, fn, args):
+        assert isinstance(res, Comment)
+        return res
+
+
+CommentKind.Null = CommentKind(0)
+CommentKind.Text = CommentKind(1)
+CommentKind.InlineCommand = CommentKind(2)
+CommentKind.HTMLStartTag = CommentKind(3)
+CommentKind.HTMLEndTag = CommentKind(4)
+CommentKind.Paragraph = CommentKind(5)
+CommentKind.BlockCommand = CommentKind(6)
+CommentKind.ParamCommand = CommentKind(7)
+CommentKind.TParamCommand = CommentKind(8)
+CommentKind.VerbatimBlockCommand = CommentKind(9)
+CommentKind.VerbatimBlockLine = CommentKind(10)
+CommentKind.VerbatimLine = CommentKind(11)
+CommentKind.FullComment = CommentKind(12)
+
+class Comment(Structure):
+    """
+    The Cursor class represents a reference to an element within the AST. It
+    acts as a kind of iterator.
+    """
+    _fields_ = [("TranslationUnit", c_void_p), ("ASTNode", c_void_p)]
+    
+    @staticmethod
+    def from_result(res, fn, args):
+        assert isinstance(res, Comment)
+        return res
+    
+    def get_num_children(self):
+        return conf.lib.clang_Comment_getNumChildren(self)
+    
+    def get_child(self, childIdx):
+        return conf.lib.clang_Comment_getChild(self, childIdx)
+    
+    def is_whitespace(self):
+        return conf.lib.clang_Comment_isWhitespace(self)
+    
+    def has_trailing_newline(self):
+        return conf.lib.clang_InlineContentComment_hasTrailingNewline(self)
+    
+    def get_text_comment_text(self):
+        return conf.lib.clang_TextComment_getText(self)
+    
+    def get_inline_command_comment_command_name(self):
+        return conf.lib.clang_InlineCommandComment_getCommandName(self)
+    
+    def get_render_kind(self):
+        return conf.lib.clang_InlineCommandComment_getRenderKind(self)
+    
+    def get_inline_command_num_args(self):
+        return conf.lib.clang_InlineCommandComment_getNumArgs(self)
+    
+    def get_inline_command_arg_text(self, argIdx):
+        return conf.lib.clang_InlineCommandComment_getArgText(self, argIdx)
+    
+    def get_tag_name(self):
+        return conf.lib.clang_HTMLTagComment_getTagName(self)
+    
+    def is_self_closing(self):
+        return conf.lib.clang_HTMLStartTagComment_isSelfClosing(self)
+    
+    def get_num_attrs(self):
+        return conf.lib.clang_HTMLStartTag_getNumAttrs(self)
+    
+    def get_attr_name(self, attrIdx):
+        return conf.lib.clang_HTMLStartTag_getAttrName(self, attrIdx)
+    
+    def get_attr_value(self, attrIdx):
+        return conf.lib.clang_HTMLStartTag_getAttrValue(self, attrIdx)
+    
+    def get_block_command_comment_command_name(self):
+        return conf.lib.clang_BlockCommandComment_getCommandName(self)
+    
+    def get_block_command_num_args(self):
+        return conf.lib.clang_BlockCommandComment_getNumArgs(self)
+    
+    def get_block_command_arg_text(self, argIdx):
+        return conf.lib.clang_BlockCommandComment_getArgText(self, argIdx)
+    
+    def get_paragraph(self):
+        return conf.lib.clang_BlockCommandComment_getParagraph(self)
+    
+    def get_param_name(self):
+        return conf.lib.clang_ParamCommandComment_getParamName(self)
+    
+    def is_param_index_valid(self):
+        return conf.lib.clang_ParamCommandComment_isParamIndexValid(self)
+    
+    def get_param_index(self):
+        return conf.lib.clang_ParamCommandComment_getParamIndex(self)
+    
+    def is_direction_explicit(self):
+        return conf.lib.clang_ParamCommandComment_isDirectionExplicit(self)
+    
+    def get_direction(self):
+        return conf.lib.clang_ParamCommandComment_getDirection(self)
+    
+    def get_param_name(self):
+        return conf.lib.clang_TParamCommandComment_getParamName(self)
+    
+    def is_param_position_valid(self):
+        return conf.lib.clang_TParamCommandComment_isParamPositionValid(self)
+    
+    def get_depth(self):
+        return conf.lib.clang_TParamCommandComment_getDepth(self)
+    
+    def get_index(self, depth):
+        return conf.lib.clang_TParamCommandComment_getIndex(self, depth)
+    
+    def get_verbatim_block_line_comment_text(self):
+        return conf.lib.clang_VerbatimBlockLineComment_getText(self)
+    
+    def get_verbatim_line_comment_text(self):
+        return conf.lib.clang_VerbatimLineComment_getText(self)
+    
+    def get_as_string(self):
+        return conf.lib.clang_HTMLTagComment_getAsString(self)
+    
+    def get_as_html(self):
+        return conf.lib.clang_FullComment_getAsHTML(self)
+    
+    def get_as_xml(self):
+        return conf.lib.clang_FullComment_getAsXML(self)
+
+    def get_command_name(self):
+        kind = self.kind
+        if kind == CommentKind.InlineCommand:
+            return self.get_inline_command_comment_command_name()
+        if kind == CommentKind.BlockCommand:
+            return self.get_block_command_comment_command_name()
+        return None
+
+    def get_num_args(self):
+        kind = self.kind
+        if kind == CommentKind.InlineCommand:
+            return self.get_inline_command_num_args()
+        if kind == CommentKind.BlockCommand:
+            return self.get_block_command_num_args()
+        return None
+
+    def get_arg_text(self, argIdx):
+        kind = self.kind
+        if kind == CommentKind.InlineCommand:
+            return self.get_inline_command_arg_text(argIdx)
+        if kind == CommentKind.BlockCommand:
+            return self.get_block_command_arg_text(argIdx)
+        return None
+
+    @property
+    def text(self) -> str:
+        kind = self.kind
+        if kind == CommentKind.Text:
+            return self.get_text_comment_text()
+        if kind == CommentKind.VerbatimBlockLine:
+            return self.get_verbatim_block_line_comment_text()
+        if kind == CommentKind.VerbatimLine:
+            return self.get_verbatim_line_comment_text()
+        return None
+
+    @property
+    def children(self):
+        class ChildCommentIterator:
+            def __init__(self, comment:Comment):
+                self._parent = comment
+                self._index = 0
+
+            def __len__(self):
+                if not hasattr(self, '_length'):
+                    self._length = int(conf.lib.clang_Comment_getNumChildren(self._parent))
+                return self._length
+
+            def __getitem__(self, key) -> Comment:                
+                if not isinstance(key, int):
+                    raise TypeError("Must supply a non-negative int.")
+
+                if key < 0:
+                    raise IndexError("Only non-negative indexes are accepted.")
+
+                if key >= len(self):
+                    raise IndexError("Index greater than container length: "
+                                     "%d > %d" % ( key, len(self) ))
+
+                return conf.lib.clang_Comment_getChild(self._parent, key)
+
+            def __iter__(self):                
+                return self
+
+            def __next__(self):
+                if self._index >= len(self):
+                    raise StopIteration
+                child = self[self._index]
+                self._index += 1
+                return child
+
+
+        return ChildCommentIterator(self)
+
+    @property
+    def kind(self) -> CommentKind:
+        if not hasattr(self, '_kind'):
+            self._kind = conf.lib.clang_Comment_getKind(self)
+
+        return CommentKind.from_id(self._kind)
+
+
 ### Cursors ###
 
 class Cursor(Structure):
@@ -1418,6 +1640,12 @@ class Cursor(Structure):
     acts as a kind of iterator.
     """
     _fields_ = [("_kind_id", c_int), ("xdata", c_int), ("data", c_void_p * 3)]
+    def get_parsed_comment(self):
+        """
+        Returns true if the declaration pointed at by the cursor is also a
+        definition of that entity.
+        """
+        return conf.lib.clang_Cursor_getParsedComment(self)
 
     @staticmethod
     def from_location(tu, location):
@@ -3622,11 +3850,81 @@ functionList = [
    [Cursor],
    _CXString,
    _CXString.from_result),
-
+ 
+ ("clang_Comment_getKind", [Comment], c_uint),
+ 
+ ("clang_Comment_getNumChildren", [Comment], c_uint),
+ 
+ ("clang_Comment_getChild", [Comment, c_uint], Comment, Comment.from_result),
+ 
+ ("clang_Comment_isWhitespace", [Comment], c_uint),
+ 
+ ("clang_InlineContentComment_hasTrailingNewline", [Comment], c_uint),
+ 
+ ("clang_TextComment_getText", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_InlineCommandComment_getCommandName", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_InlineCommandComment_getRenderKind", [Comment], c_uint),
+ 
+ ("clang_InlineCommandComment_getNumArgs", [Comment], c_uint),
+ 
+ ("clang_InlineCommandComment_getArgText", [Comment, c_uint], _CXString, _CXString.from_result),
+ 
+ ("clang_HTMLTagComment_getTagName", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_HTMLStartTagComment_isSelfClosing", [Comment], c_uint),
+ 
+ ("clang_HTMLStartTag_getNumAttrs", [Comment], c_uint),
+ 
+ ("clang_HTMLStartTag_getAttrName", [Comment, c_uint], _CXString, _CXString.from_result),
+ 
+ ("clang_HTMLStartTag_getAttrValue", [Comment, c_uint], _CXString, _CXString.from_result),
+ 
+ ("clang_BlockCommandComment_getCommandName", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_BlockCommandComment_getNumArgs", [Comment], c_uint),
+ 
+ ("clang_BlockCommandComment_getArgText", [Comment, c_uint], _CXString, _CXString.from_result),
+ 
+ ("clang_BlockCommandComment_getParagraph", [Comment], Comment, Comment.from_result),
+ 
+ ("clang_ParamCommandComment_getParamName", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_ParamCommandComment_isParamIndexValid", [Comment], c_uint),
+ 
+ ("clang_ParamCommandComment_getParamIndex", [Comment], c_uint),
+ 
+ ("clang_ParamCommandComment_isDirectionExplicit", [Comment], c_uint),
+ 
+ ("clang_ParamCommandComment_getDirection", [Comment], c_uint),
+  
+ ("clang_TParamCommandComment_getParamName", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_TParamCommandComment_isParamPositionValid", [Comment], c_uint),
+ 
+ ("clang_TParamCommandComment_getDepth", [Comment], c_uint),
+ 
+ ("clang_TParamCommandComment_getIndex", [Comment, c_uint], c_uint),
+ 
+ ("clang_VerbatimBlockLineComment_getText", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_VerbatimLineComment_getText", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_HTMLTagComment_getAsString", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_FullComment_getAsHTML", [Comment], _CXString, _CXString.from_result),
+ 
+ ("clang_FullComment_getAsXML", [Comment], _CXString, _CXString.from_result),
+ 
   ("clang_Cursor_getMangling",
    [Cursor],
    _CXString,
    _CXString.from_result),
+  ("clang_Cursor_getParsedComment",
+   [Cursor],
+   Comment,
+   Comment.from_result),
 
 # ("clang_getCXTUResourceUsage",
 #  [TranslationUnit],
@@ -4195,9 +4493,12 @@ conf = Config()
 register_enumerations()
 
 __all__ = [
+    'AccessSpecifier',
     'AvailabilityKind',
     'Config',
     'CodeCompletionResults',
+    'Comment',
+    'CommentKind',
     'CompilationDatabase',
     'CompileCommands',
     'CompileCommand',
